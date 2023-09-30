@@ -89,8 +89,6 @@ void parse_args(ArgsParser & mArgs, int argc, const char **argv) {
         } else {
             i++; // Move to the next argument
         }
-
-      //mArgs.mArguments[key].value = argv[i + 1];
     }
     //return mArgs;
   }
@@ -112,20 +110,28 @@ T get(const ArgsParser & parser , const CmdlineArgRef<T> &ref)  {
 
 
 int main() {
+    // char const *test_argv[] = {"program_name",
+    //                          "--batch-size",
+    //                          "100",
+    //                           "-ll:gpus",
+    //                          "6",
+    //                          "--fusion",
+    //                          "false",
+    //                          "--verbose"};
+    
     char const *test_argv[] = {"program_name",
                              "--batch-size",
                              "100",
                               "-ll:gpus",
                              "6",
                              "--fusion",
-                             "false",
-                             "--verbose"};
+                             "false"};
     
     ArgsParser args;
-    auto batch_size_ref = add_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training",false);
-    auto ll_gpus_ref = add_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training",false);
-    auto verbose_ref = add_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs", true);
-    parse_args(args , 8, const_cast<const char **>(test_argv));
+    auto batch_size_ref = add_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
+    auto ll_gpus_ref = add_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
+    auto verbose_ref = add_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs");
+    parse_args(args , 7, const_cast<const char **>(test_argv));
 
   // args.parse_args(9, const_cast<char **>(test_argv));
    std::cout<<"batch_size:"<<get(args, batch_size_ref)<<std::endl;
