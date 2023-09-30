@@ -1,11 +1,4 @@
-arg:--batch-size
-arg:-ll:gpus
-arg:--fusion
-arg:--verbose
-arg:--batch-size
-arg:-ll:gpus
-arg:--fusion
-arg:--verbose
+result.pass_optional_args:1 and  result.num_optional_args:1
 batch_size:100
 ll_gpus:6
 fusion:0

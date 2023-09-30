@@ -96,7 +96,6 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
         }
     }
     return result;
-    //return mArgs;
   }
 
 template <typename T>
