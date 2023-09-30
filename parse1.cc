@@ -76,29 +76,19 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
    for(const auto & [key, arg] : mArgs.mArguments) {
     result.mArguments[key] = arg;
   }
-    for(auto const & kv : result.mArguments) {
-      std::cout<<"kv.first:"<<kv.first<<std::endl;
-    }
     while (i  < argc) {
-      std::cout<<"parse_args::i:"<<i<<" and argv[i]:"<<argv[i]<<"and argc:"<<argc<<std::endl;
       std::string key = parseKey(argv[i]);
       if (key == "help" || key == "h") {
         exit(1);
       }
-     // result.mArguments[key] = mArgs.mArguments.at(key);
-      std::cout<<"parse_args::key:"<<key <<" and result.mArguments.count(key):"<<result.mArguments.count(key)<<std::endl;
       // Check if the key is a store_true argument
         if(mArgs.mArguments.count(key) && mArgs.mArguments.at(key).is_store_true) {
-           // mArgs.mArguments[key].value = "true"; // Set to true if the flag is present
-            
             result.mArguments[key].value = "true";
-          //  result.mArguments[key].is_store_true = true;
             i++;
             continue; // Skip the next iteration as there's no value associated with this flag
         }
       // Check if we have a value for this argument
         if (i + 1 < argc && (argv[i + 1][0] != '-' || (argv[i + 1][0] == '-' && argv[i + 1][1] == '-'))) {
-           // mArgs.mArguments[key].value = argv[i + 1];
             result.mArguments[key].value = argv[i + 1];
             i += 2; // Increment to skip the value in the next iteration
         } else {
@@ -112,12 +102,9 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
 template <typename T>
 T get(const ArgsParser & parser , const CmdlineArgRef<T> &ref)  {
     std::string key = ref.key;
-    std::cout<<"1 T get key:"<<key<<" and parser.mArguments.count(key):"<<parser.mArguments.count(key)<<std::endl;
     if(parser.mArguments.count(key)) {
-      std::cout<<"2 T get key:"<<key<<"and parser.mArguments.at(key).is_store_true:"<<parser.mArguments.at(key).is_store_true <<std::endl;
         if(parser.mArguments.at(key).is_store_true) {
               return true;
-             //return convert<T>(parser.mArguments.at(key).value.value_or("false"));
         } else if (parser.mArguments.at(key).default_value || parser.mArguments.at(key).value.has_value()) {
             return convert<T>(parser.mArguments.at(key).value.value());
         } 
@@ -142,7 +129,8 @@ int main() {
                               "-ll:gpus",
                              "6",
                              "--fusion",
-                             "false"};
+                             "false",
+                             "--verbose"};
     
     ArgsParser args;
     auto batch_size_ref = add_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
@@ -150,7 +138,7 @@ int main() {
     auto fusion_ref = add_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
 
     auto verbose_ref = add_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs");
-    ArgsParser result = parse_args(args , 7, const_cast<const char **>(test_argv));
+    ArgsParser result = parse_args(args , 8, const_cast<const char **>(test_argv));
 
   // args.parse_args(9, const_cast<char **>(test_argv));
    std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
