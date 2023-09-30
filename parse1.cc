@@ -40,6 +40,7 @@ template <typename T>
                          const std::string &description, bool is_store_true = false) {
     std::string parse_key = parseKey(key);
     parser.mArguments[parse_key].description = description;
+    std::cout<<"add_argument parse_key:"<<parse_key<<std::endl;
     if(default_value.has_value()) {  // Use has_value() to check if there's a value
         parser.mArguments[parse_key].value = std::to_string(default_value.value());  // Convert the value to string
         parser.mArguments[parse_key].default_value = true;
@@ -71,24 +72,33 @@ bool convert<bool>(std::string const &s) {
 ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
     int i  = 1;
     ArgsParser result;
+
+   for(const auto & [key, arg] : mArgs.mArguments) {
+    result.mArguments[key] = arg;
+  }
+    for(auto const & kv : result.mArguments) {
+      std::cout<<"kv.first:"<<kv.first<<std::endl;
+    }
     while (i  < argc) {
-      std::cout<<"i:"<<i<<" and argv[i]:"<<argv[i]<<"and argc:"<<argc<<std::endl;
+      std::cout<<"parse_args::i:"<<i<<" and argv[i]:"<<argv[i]<<"and argc:"<<argc<<std::endl;
       std::string key = parseKey(argv[i]);
       if (key == "help" || key == "h") {
         exit(1);
       }
+     // result.mArguments[key] = mArgs.mArguments.at(key);
+      std::cout<<"parse_args::key:"<<key <<" and result.mArguments.count(key):"<<result.mArguments.count(key)<<std::endl;
       // Check if the key is a store_true argument
         if(mArgs.mArguments.count(key) && mArgs.mArguments.at(key).is_store_true) {
            // mArgs.mArguments[key].value = "true"; // Set to true if the flag is present
-            result.mArguments[key] = mArgs.mArguments.at(key);
+            
             result.mArguments[key].value = "true";
+          //  result.mArguments[key].is_store_true = true;
             i++;
             continue; // Skip the next iteration as there's no value associated with this flag
         }
       // Check if we have a value for this argument
         if (i + 1 < argc && (argv[i + 1][0] != '-' || (argv[i + 1][0] == '-' && argv[i + 1][1] == '-'))) {
            // mArgs.mArguments[key].value = argv[i + 1];
-            result.mArguments[key] = mArgs.mArguments.at(key);
             result.mArguments[key].value = argv[i + 1];
             i += 2; // Increment to skip the value in the next iteration
         } else {
@@ -102,7 +112,7 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
 template <typename T>
 T get(const ArgsParser & parser , const CmdlineArgRef<T> &ref)  {
     std::string key = ref.key;
-    std::cout<<"1 T get key:"<<key<<std::endl;
+    std::cout<<"1 T get key:"<<key<<" and parser.mArguments.count(key):"<<parser.mArguments.count(key)<<std::endl;
     if(parser.mArguments.count(key)) {
       std::cout<<"2 T get key:"<<key<<"and parser.mArguments.at(key).is_store_true:"<<parser.mArguments.at(key).is_store_true <<std::endl;
         if(parser.mArguments.at(key).is_store_true) {
@@ -139,16 +149,16 @@ int main() {
     auto ll_gpus_ref = add_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
     auto fusion_ref = add_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
 
-    //auto verbose_ref = add_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs");
+    auto verbose_ref = add_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs");
     ArgsParser result = parse_args(args , 7, const_cast<const char **>(test_argv));
 
   // args.parse_args(9, const_cast<char **>(test_argv));
    std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
     std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
     std::cout<<"fusion:"<<get(result, fusion_ref)<<std::endl;
-   // bool is_verbose = get(result, verbose_ref);
+   bool is_verbose = get(result, verbose_ref);
 
-  //  std::cout<<"verbose:"<<is_verbose<<std::endl;
+    std::cout<<"verbose:"<<is_verbose<<std::endl;
   // std::cout << "batch_size: " << args.get(batch_size_ref) << std::endl;
   // std::cout << "learning_rate: " << args.get(learning_rate_ref) << std::endl;
   // std::cout << "fusion: " << args.get(fusion_ref) << std::endl;

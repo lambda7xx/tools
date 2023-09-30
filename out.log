@@ -1,0 +1,33 @@
+arg:--batch-size
+add_argument parse_key:batch-size
+arg:-ll:gpus
+add_argument parse_key:-ll:gpus
+arg:--fusion
+add_argument parse_key:fusion
+arg:--verbose
+add_argument parse_key:verbose
+kv.first:batch-size
+kv.first:-ll:gpus
+kv.first:fusion
+kv.first:verbose
+parse_args::i:1 and argv[i]:--batch-sizeand argc:7
+arg:--batch-size
+parse_args::key:batch-size and result.mArguments.count(key):1
+parse_args::i:3 and argv[i]:-ll:gpusand argc:7
+arg:-ll:gpus
+parse_args::key:-ll:gpus and result.mArguments.count(key):1
+parse_args::i:5 and argv[i]:--fusionand argc:7
+arg:--fusion
+parse_args::key:fusion and result.mArguments.count(key):1
+batch_size:1 T get key:batch-size and parser.mArguments.count(key):1
+2 T get key:batch-sizeand parser.mArguments.at(key).is_store_true:0
+100
+ll_gpus:1 T get key:-ll:gpus and parser.mArguments.count(key):1
+2 T get key:-ll:gpusand parser.mArguments.at(key).is_store_true:0
+6
+fusion:1 T get key:fusion and parser.mArguments.count(key):1
+2 T get key:fusionand parser.mArguments.at(key).is_store_true:0
+0
+1 T get key:verbose and parser.mArguments.count(key):1
+2 T get key:verboseand parser.mArguments.at(key).is_store_true:0
+verbose:0
