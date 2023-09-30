@@ -40,12 +40,10 @@ template <typename T>
                          const std::string &description, bool is_store_true = false) {
     std::string parse_key = parseKey(key);
     parser.mArguments[parse_key].description = description;
-    std::cout<<"add_argument parse_key:"<<parse_key<<std::endl;
     if(default_value.has_value()) {  // Use has_value() to check if there's a value
         parser.mArguments[parse_key].value = std::to_string(default_value.value());  // Convert the value to string
         parser.mArguments[parse_key].default_value = true;
         parser.mArguments[parse_key].is_store_true = is_store_true;
-        //parser.mArguments[parse_key].is_store_true = true;
         return CmdlineArgRef<T>{parse_key, default_value.value()};
     } 
     return CmdlineArgRef<T>{parse_key, T{}};
@@ -84,6 +82,7 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
       // Check if the key is a store_true argument
         if(mArgs.mArguments.count(key) && mArgs.mArguments.at(key).is_store_true) {
             result.mArguments[key].value = "true";
+            result.mArguments[key].is_store_true = true;
             i++;
             continue; // Skip the next iteration as there's no value associated with this flag
         }
@@ -137,7 +136,7 @@ int main() {
     auto ll_gpus_ref = add_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
     auto fusion_ref = add_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
 
-    auto verbose_ref = add_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs");
+    auto verbose_ref = add_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
     ArgsParser result = parse_args(args , 8, const_cast<const char **>(test_argv));
 
   // args.parse_args(9, const_cast<char **>(test_argv));

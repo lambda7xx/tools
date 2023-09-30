@@ -1,11 +1,7 @@
 arg:--batch-size
-add_argument parse_key:batch-size
 arg:-ll:gpus
-add_argument parse_key:-ll:gpus
 arg:--fusion
-add_argument parse_key:fusion
 arg:--verbose
-add_argument parse_key:verbose
 arg:--batch-size
 arg:-ll:gpus
 arg:--fusion
@@ -13,4 +9,4 @@ arg:--verbose
 batch_size:100
 ll_gpus:6
 fusion:0
-verbose:0
+verbose:1
