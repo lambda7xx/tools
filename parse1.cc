@@ -29,6 +29,7 @@ struct Argument {
     std::string description;
     bool default_value = false;
     bool is_store_true = false; // Add a new field to indicate whether the argument is store_true
+    bool is_store_passed = false;
 };
 
 struct ArgsParser {
@@ -83,6 +84,7 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
         if(mArgs.mArguments.count(key) && mArgs.mArguments.at(key).is_store_true) {
             result.mArguments[key].value = "true";
             result.mArguments[key].is_store_true = true;
+            result.mArguments[key].is_store_passed = true;
             i++;
             continue; // Skip the next iteration as there's no value associated with this flag
         }
@@ -103,7 +105,11 @@ T get(const ArgsParser & parser , const CmdlineArgRef<T> &ref)  {
     std::string key = ref.key;
     if(parser.mArguments.count(key)) {
         if(parser.mArguments.at(key).is_store_true) {
-              return true;
+            if(parser.mArguments.at(key).is_store_passed) {
+                return true;
+            } else {
+                return false;
+            }
         } else if (parser.mArguments.at(key).default_value || parser.mArguments.at(key).value.has_value()) {
             return convert<T>(parser.mArguments.at(key).value.value());
         } 
@@ -113,15 +119,6 @@ T get(const ArgsParser & parser , const CmdlineArgRef<T> &ref)  {
 
 
 int main() {
-    // char const *test_argv[] = {"program_name",
-    //                          "--batch-size",
-    //                          "100",
-    //                           "-ll:gpus",
-    //                          "6",
-    //                          "--fusion",
-    //                          "false",
-    //                          "--verbose"};
-    
     char const *test_argv[] = {"program_name",
                              "--batch-size",
                              "100",
@@ -131,15 +128,23 @@ int main() {
                              "false",
                              "--verbose"};
     
+    // char const *test_argv[] = {"program_name",
+    //                          "--batch-size",
+    //                          "100",
+    //                           "-ll:gpus",
+    //                          "6",
+    //                          "--fusion",
+    //                          "false"};
+    
     ArgsParser args;
     auto batch_size_ref = add_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
     auto ll_gpus_ref = add_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
     auto fusion_ref = add_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
 
     auto verbose_ref = add_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
-    ArgsParser result = parse_args(args , 8, const_cast<const char **>(test_argv));
+    constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
+    ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
 
-  // args.parse_args(9, const_cast<char **>(test_argv));
    std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
     std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
     std::cout<<"fusion:"<<get(result, fusion_ref)<<std::endl;
