@@ -15,7 +15,6 @@ using AllowedArgTypes = std::variant<int, bool, float, std::string>; // we can e
 
 //currently we only support "--xx" or "-x"
 std::string parseKey(const std::string & arg) {
-  std::cout<<"arg:"<<arg<<std::endl;
     if (arg.substr(0, 2) == "--") {
       return arg.substr(2);
     } else if(arg.substr(0, 1) == "-") {
@@ -29,7 +28,7 @@ struct Argument {
     std::string description;
     bool default_value = false;
     bool is_store_true = false; // Add a new field to indicate whether the argument is store_true
-    bool is_store_passed = false;
+    bool is_store_passed = false; // Add a new field to indicate whether the argument is passed
 };
 
 struct ArgsParser {
