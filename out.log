@@ -1,3 +1,6 @@
-result.pass_optional_args:0 and  result.num_optional_args:2
-terminate called after throwing an instance of 'std::runtime_error'
-  what():  some optional args are not passed: -ll:cpus  -ll:gpus  
+result.pass_optional_args:2 and  result.num_optional_args:2
+batch_size:100
+ll_gpus:6
+fusion:0
+ll_cpus:8
+verbose:1

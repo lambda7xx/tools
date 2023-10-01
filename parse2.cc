@@ -180,20 +180,32 @@ T get(const ArgsParser & parser , const CmdlineArgRef<T> &ref)  {
 
 int main() {
 
-      char const *test_argv[] = {"program_name",
-                             "--batch-size",
-                             "100",
-                             "--fusion",
-                             "false",
-                             "--verbose"};
+      // char const *test_argv[] = {"program_name",
+      //                        "--batch-size",
+      //                        "100",
+      //                        "--fusion",
+      //                        "false",
+      //                        "--verbose"};
     // char const *test_argv[] = {"program_name",
     //                          "--batch-size",
     //                          "100",
     //                           "-ll:gpus",
     //                          "6",
+    //                          "-ll:cpus",
+    //                           "8",
     //                          "--fusion",
     //                          "false",
     //                          "--verbose"};
+
+        char const *test_argv[] = {"program_name",
+                             "--batch-size",
+                             "100",
+                              "-ll:gpus",
+                             "6",
+                             "-ll:cpus",
+                              "8",
+                             "--fusion",
+                             "false"};
     
     // char const *test_argv[] = {"program_name",
     //                          "--batch-size",
