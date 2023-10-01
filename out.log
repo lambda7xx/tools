@@ -1,2 +1,2 @@
 terminate called after throwing an instance of 'std::runtime_error'
-  what():  required args: learning-rate needs a value
+  what():  invalid args: fusion does not exist
