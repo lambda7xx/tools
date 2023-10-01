@@ -74,6 +74,7 @@ template <typename T>
     parser.mArguments[parse_key].description = description;
     parser.mArguments[parse_key].is_store_true = is_store_true;
     parser.num_required_args++;
+    std::cout<<"add_required_argument, parser.num_required_args:"<<parser.num_required_args<<std::endl;
     parser.mArguments[parse_key].is_optional = false;
     return CmdlineArgRef<T>{parse_key, T{}};
   }
@@ -121,6 +122,8 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
     result.mArguments[key] = arg;
   }
   result.num_required_args = mArgs.num_required_args;
+  std::cout<<"parse_args, mArgs.num_required_args:"<<mArgs.num_required_args<<" and  result.num_required_args:"<<result.num_required_args<<std::endl;
+
     while (i  < argc) {
         std::string key = parseKey(argv[i]);
         if (key == "help" || key == "h") {
@@ -157,7 +160,7 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
         }
     }
     std::cout<<"result.pass_required_args:"<<result.pass_required_args<<" and  result.pass_required_args:"<<result.pass_required_args<<std::endl;
-    if(result.pass_required_args != result.pass_required_args) {
+    if(result.num_required_args != result.pass_required_args) {
         std::vector<std::string> missing_args;
         for(const auto & [key, arg] : mArgs.mArguments) {
             if(!arg.is_optional) {//required args
@@ -199,43 +202,10 @@ T get(const ArgsParser & parser , const CmdlineArgRef<T> &ref)  {
     throw std::runtime_error("invalid args: " + ref.key);
 }
 
-
+/** normal test
 int main() {
 
-      // char const *test_argv[] = {"program_name",
-      //                        "--batch-size",
-      //                        "100",
-      //                        "--fusion",
-      //                        "false",
-      //                        "--verbose"};
-    // char const *test_argv[] = {"program_name",
-    //                          "--batch-size",
-    //                          "100",
-    //                           "-ll:gpus",
-    //                          "6",
-    //                          "-ll:cpus",
-    //                           "8",
-    //                          "--fusion",
-    //                          "false",
-    //                          "--verbose"};
 
-        // char const *test_argv[] = {"program_name",
-        //                      "--batch-size",
-        //                      "100",
-        //                       "-ll:gpus",
-        //                      "6",
-        //                      "-ll:cpus",
-        //                       "8",
-        //                      "--fusion",
-        //                      "false"};
-
-            // char const *test_argv[] = {"program_name",
-            //                  "--batch-size",
-            //                  "100",
-            //                  "--thx",
-            //                  "0.03",
-            //                   "--learning-rate"};
-    
     char const *test_argv[] = {"program_name",
                              "--batch-size",
                              "100",
@@ -247,7 +217,7 @@ int main() {
     ArgsParser args;
     auto batch_size_ref = add_optional_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
     auto learning_rate_ref = add_optional_argument(args, "--learning-rate", std::optional<float>(0.001), "Learning rate for the optimizer");
-   // auto thx_ref = add_argument(args, "--thx", std::optional<float>(0.001), "Learning rate for the optimizer");
+    auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
     auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
     constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
 
@@ -255,26 +225,232 @@ int main() {
     std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
     std::cout<<"learning_rate:"<<get(result, learning_rate_ref)<<std::endl;
     std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
-    //auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
-  //   auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
-  //   auto ll_gpus_ref = add_optional_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
-  //   auto ll_cpus_ref = add_optional_argument<int>(args, "-ll:cpus", std::nullopt, "Number of CPUs to be used for training");
+}
+**/
 
-  //   auto verbose_ref = add_required_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
-  //   constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
-  //   ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
+/*test with store_true， pass the verbose via command line or not
+int main() {
+    
+    // char const *test_argv[] = {"program_name",
+    //                          "--batch-size",
+    //                          "100",
+    //                           "-ll:gpus",
+    //                          "6",
+    //                          "--fusion",
+    //                          "false",
+    //                          "--verbose"};
+        char const *test_argv[] = {"program_name",
+                             "--batch-size",
+                             "100",
+                              "-ll:gpus",
+                             "6",
+                             "--fusion",
+                             "false"};
+    ArgsParser args;
+    auto batch_size_ref = add_optional_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
+    auto learning_rate_ref = add_optional_argument(args, "--learning-rate", std::optional<float>(0.001), "Learning rate for the optimizer");
+    auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
+    auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
+    auto verbose_ref = add_required_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
 
-  //  std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
+    constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
 
-  //   std::cout<<"fusion:"<<get(result, fusion_ref)<<std::endl;
-  //   std::cout<<"ll_cpus:"<<get(result, ll_cpus_ref)<<std::endl;
-  //  bool is_verbose = get(result, verbose_ref);
+    ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
+    std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
+    std::cout<<"learning_rate:"<<get(result, learning_rate_ref)<<std::endl;
+    std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
+    std::cout<<"verbose:"<<get(result, verbose_ref)<<std::endl;
+}
+*/
 
-    //std::cout<<"verbose:"<<is_verbose<<std::endl;
-  // std::cout << "batch_size: " << args.get(batch_size_ref) << std::endl;
-  // std::cout << "learning_rate: " << args.get(learning_rate_ref) << std::endl;
-  // std::cout << "fusion: " << args.get(fusion_ref) << std::endl;
-  // std::cout << "ll_gpus: " << args.get(ll_gpus_ref) << std::endl;
-//   CmdlineArgRef<int> ref ;
-//   args.get(ref);
+/*test batch_size via command , it will throw exception, because we only support --batch-size or -batch-size via command line
+int main() {
+    
+    // char const *test_argv[] = {"program_name",
+    //                          "--batch-size",
+    //                          "100",
+    //                           "-ll:gpus",
+    //                          "6",
+    //                          "--fusion",
+    //                          "false",
+    //                          "--verbose"};
+        char const *test_argv[] = {"program_name",
+                             "batch-size",
+                             "100",
+                              "-ll:gpus",
+                             "6",
+                             "--fusion",
+                             "false"};
+    ArgsParser args;
+    auto batch_size_ref = add_optional_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
+    auto learning_rate_ref = add_optional_argument(args, "--learning-rate", std::optional<float>(0.001), "Learning rate for the optimizer");
+    auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
+    auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
+    auto verbose_ref = add_required_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
+
+    constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
+
+    ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
+    std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
+    std::cout<<"learning_rate:"<<get(result, learning_rate_ref)<<std::endl;
+    std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
+    std::cout<<"verbose:"<<get(result, verbose_ref)<<std::endl;
+}*/
+
+// //test the invalid ref 
+// int main() {
+    
+//     // char const *test_argv[] = {"program_name",
+//     //                          "--batch-size",
+//     //                          "100",
+//     //                           "-ll:gpus",
+//     //                          "6",
+//     //                          "--fusion",
+//     //                          "false",
+//     //                          "--verbose"};
+//     /*char const *test_argv[] = {"program_name",
+//                              "--batch-size",
+//                              "100",
+//                               "-ll:gpus",
+//                              "6",
+//                              "--fusion",
+//                              "false"};
+//     ArgsParser args;
+//     auto batch_size_ref = add_optional_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
+//     auto learning_rate_ref = add_optional_argument(args, "--learning-rate", std::optional<float>(0.001), "Learning rate for the optimizer");
+//     auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
+//     auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
+//     auto verbose_ref = add_required_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
+
+//     constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
+
+//     ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
+//     std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
+//     std::cout<<"learning_rate:"<<get(result, learning_rate_ref)<<std::endl;
+//     std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
+//     std::cout<<"verbose:"<<get(result, verbose_ref)<<std::endl;*/
+//     CmdlineArgRef<int> invalid_ref{"invalid", {}};
+//     char const *test_argv[] = {"program_name"};
+
+//     ArgsParser args;
+//     parse_args(args, 1, const_cast<const char **>(test_argv));
+//     get(args, invalid_ref); // throw exception  because it's invalid ref
+// }
+
+/*test with store_true， pass the verbose via command line or not
+int main() {
+    
+    // char const *test_argv[] = {"program_name",
+    //                          "--batch-size",
+    //                          "100",
+    //                           "-ll:gpus",
+    //                          "6",
+    //                          "--fusion",
+    //                          "false",
+    //                          "--verbose"};
+        char const *test_argv[] = {"program_name",
+                             "--batch-size",
+                             "100",
+                              "-ll:gpus",
+                             "6",
+                             "--fusion",
+                             "false"};
+    ArgsParser args;
+    auto batch_size_ref = add_optional_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
+    auto learning_rate_ref = add_optional_argument(args, "--learning-rate", std::optional<float>(0.001), "Learning rate for the optimizer");
+    auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
+    auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
+    auto verbose_ref = add_required_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
+
+    constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
+
+    ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
+    std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
+    std::cout<<"learning_rate:"<<get(result, learning_rate_ref)<<std::endl;
+    std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
+    std::cout<<"verbose:"<<get(result, verbose_ref)<<std::endl;
+}
+*/
+
+//the verbose is not passed via command line, so it will throw exception
+/*int main() {
+
+    char const *test_argv[] = {
+      "program_name", "--batch-size", "100"};
+      ArgsParser args;
+  auto batch_size_ref = add_optional_argument(
+      args, "--batch-size", std::optional<int>(32), "batch size for training");
+  auto ll_gpus_ref = add_required_argument<int>(
+      args,
+      "-ll:gpus",
+      std::nullopt,
+      "Number of GPUs to be used for training"); // support non-default value
+  constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
+  ArgsParser result = parse_args(
+      args,
+      test_argv_length,
+      const_cast<const char **>(test_argv)); // throw exception because we don't pass
+                                        // -ll:gpus via command
+ // std::cout << "batch_size:" << get(result, batch_size_ref) << std::endl;
+// get(result, ll_gpus_ref);
+} */
+
+// ./a.out --args1 4  --arg2 4 -args3  throw exceptions
+/*int main( ) {
+    char const *test_argv[] = {"program_name",
+                               "--batch-size",
+                               "100",
+                               "--learning-rate",
+                               "0.03",
+                               "--epoch"};
+    ArgsParser args;
+    auto batch_size_ref =
+        add_optional_argument(args,
+                              "--batch-size",
+                              std::optional<int>(32),
+                              "Size of each batch during training");
+    auto learning_rate_ref =
+        add_optional_argument(args,
+                              "--learning-rate",
+                              std::optional<float>(0.001),
+                              "Learning rate for the optimizer");
+    auto epoch_ref = add_optional_argument(args,
+                                           "--epoch",
+                                           std::optional<int>(1),
+                                           "Number of epochs for training");
+    constexpr size_t test_argv_length =
+        sizeof(test_argv) / sizeof(test_argv[0]);
+    parse_args(
+        args, test_argv_length, const_cast<char const **>(test_argv));
+}*/
+
+//./a.out --args 4  --arg2 -args3 4
+int main() {
+      char const *test_argv[] = {
+        "program_name",
+        "--batch-size",
+        "100",
+        "--epoch",
+        "--learning-rate",
+        "0.03",
+    };
+    ArgsParser args;
+    auto batch_size_ref =
+        add_optional_argument(args,
+                              "--batch-size",
+                              std::optional<int>(32),
+                              "Size of each batch during training");
+    auto learning_rate_ref =
+        add_optional_argument(args,
+                              "--learning-rate",
+                              std::optional<float>(0.001),
+                              "Learning rate for the optimizer");
+    auto epoch_ref = add_optional_argument(args,
+                                           "--epoch",
+                                           std::optional<int>(1),
+                                           "Number of epochs for training");
+    constexpr size_t test_argv_length =
+        sizeof(test_argv) / sizeof(test_argv[0]);
+    parse_args(
+        args, test_argv_length, const_cast<char const **>(test_argv));
 }
