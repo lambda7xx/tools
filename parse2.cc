@@ -40,20 +40,6 @@ struct ArgsParser {
   int pass_optional_args = 0;
 };
 
-// template <typename T>
-//   CmdlineArgRef<T> add_required_argument(ArgsParser & parser, const std::string & key, const std::optional<T> & default_value,
-//                          const std::string &description, bool is_store_true = false) {
-//     std::string parse_key = parseKey(key);
-//     parser.requeiredArguments[parse_key].description = description;
-//     if(default_value.has_value()) {  // Use has_value() to check if there's a value
-//         parser.requeiredArguments[parse_key].value = std::to_string(default_value.value());  // Convert the value to string
-//         parser.requeiredArguments[parse_key].default_value = true;
-//         parser.requeiredArguments[parse_key].is_store_true = is_store_true;
-//         return CmdlineArgRef<T>{parse_key, default_value.value()};
-//     } 
-//     return CmdlineArgRef<T>{parse_key, T{}};
-//   }
-
 template <typename T>
   CmdlineArgRef<T> add_required_argument(ArgsParser & parser, const std::string & key, const std::optional<T> & default_value,
                          const std::string &description, bool is_store_true = false) {
@@ -109,21 +95,20 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
   }
   result.num_optional_args = mArgs.num_optional_args;
     while (i  < argc) {
-      std::string key = parseKey(argv[i]);
-      if (key == "help" || key == "h") {
-        exit(1);
-      }
-      // Check if the key is a store_true argument
+        std::string key = parseKey(argv[i]);
+        if (key == "help" || key == "h") {
+            exit(1);
+        }
+
         if(mArgs.requeiredArguments.count(key) && mArgs.requeiredArguments.at(key).is_store_true) {
             result.requeiredArguments[key].value = "true";
             result.requeiredArguments[key].is_store_true = true;
             result.requeiredArguments[key].is_store_passed = true;
             i++;
-            continue; // Skip the next iteration as there's no value associated with this flag
+            continue; 
         }
-      // Check if we have a value for this argument
-        if (i + 1 < argc && (argv[i + 1][0] != '-' || (argv[i + 1][0] == '-' && argv[i + 1][1] == '-'))) {
-           // result.requeiredArguments[key].value = argv[i + 1];
+
+        if (i + 1 < argc && argv[i + 1][0] != '-') {
             if(result.requeiredArguments.count(key)) {
                 result.requeiredArguments[key].value = argv[i + 1];
             } else if(result.optionalArguments.count(key)) {
@@ -133,9 +118,12 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
             } else {
                 throw std::runtime_error("invalid args: " + key + " does not exist") ;
             }
-            i += 2; // Increment to skip the value in the next iteration
+            i += 2; 
         } else {
-            i++; // Move to the next argument
+            if (result.requeiredArguments.count(key) && !result.requeiredArguments.at(key).is_store_true) {
+                throw std::runtime_error("required args: " + key + " needs a value");
+            }
+            i++; 
         }
     }
     std::cout<<"result.pass_optional_args:"<<result.pass_optional_args<<" and  result.num_optional_args:"<<result.num_optional_args<<std::endl;
@@ -197,15 +185,22 @@ int main() {
     //                          "false",
     //                          "--verbose"};
 
-        char const *test_argv[] = {"program_name",
+        // char const *test_argv[] = {"program_name",
+        //                      "--batch-size",
+        //                      "100",
+        //                       "-ll:gpus",
+        //                      "6",
+        //                      "-ll:cpus",
+        //                       "8",
+        //                      "--fusion",
+        //                      "false"};
+
+            char const *test_argv[] = {"program_name",
                              "--batch-size",
                              "100",
-                              "-ll:gpus",
-                             "6",
-                             "-ll:cpus",
-                              "8",
-                             "--fusion",
-                             "false"};
+                             "--thx",
+                             "0.03",
+                              "--learning-rate"};
     
     // char const *test_argv[] = {"program_name",
     //                          "--batch-size",
@@ -217,22 +212,29 @@ int main() {
     
     ArgsParser args;
     auto batch_size_ref = add_required_argument(args, "--batch-size", std::optional<int>(32), "Size of each batch during training");
-    //auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
-    auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
-    auto ll_gpus_ref = add_optional_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
-    auto ll_cpus_ref = add_optional_argument<int>(args, "-ll:cpus", std::nullopt, "Number of CPUs to be used for training");
-
-    auto verbose_ref = add_required_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
-    constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
+    auto learning_rate_ref = add_required_argument(args, "--learning-rate", std::optional<float>(0.001), "Learning rate for the optimizer");
+    auto thx_ref = add_required_argument(args, "--thx", std::optional<float>(0.001), "Learning rate for the optimizer");
+      constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
     ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
+  std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
+    std::cout<<"learning_rate:"<<get(result, learning_rate_ref)<<std::endl;
+    std::cout<<"thx:"<<get(result, thx_ref)<<std::endl;
+    //auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
+  //   auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
+  //   auto ll_gpus_ref = add_optional_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
+  //   auto ll_cpus_ref = add_optional_argument<int>(args, "-ll:cpus", std::nullopt, "Number of CPUs to be used for training");
 
-   std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
-    std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
-    std::cout<<"fusion:"<<get(result, fusion_ref)<<std::endl;
-    std::cout<<"ll_cpus:"<<get(result, ll_cpus_ref)<<std::endl;
-   bool is_verbose = get(result, verbose_ref);
+  //   auto verbose_ref = add_required_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
+  //   constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
+  //   ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
 
-    std::cout<<"verbose:"<<is_verbose<<std::endl;
+  //  std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
+  //   std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
+  //   std::cout<<"fusion:"<<get(result, fusion_ref)<<std::endl;
+  //   std::cout<<"ll_cpus:"<<get(result, ll_cpus_ref)<<std::endl;
+  //  bool is_verbose = get(result, verbose_ref);
+
+    //std::cout<<"verbose:"<<is_verbose<<std::endl;
   // std::cout << "batch_size: " << args.get(batch_size_ref) << std::endl;
   // std::cout << "learning_rate: " << args.get(learning_rate_ref) << std::endl;
   // std::cout << "fusion: " << args.get(fusion_ref) << std::endl;
