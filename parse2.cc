@@ -4,6 +4,8 @@
 #include <string>
 #include <optional>
 #include <unordered_map>
+#include <vector>
+#include <algorithm>
 
 template <typename T>
 struct CmdlineArgRef {
@@ -98,7 +100,7 @@ bool convert<bool>(std::string const &s) {
 ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
     int i  = 1;
     ArgsParser result;
-
+    std::vector<std::string> optional_args_passed;
    for(const auto & [key, arg] : mArgs.requeiredArguments) {
     result.requeiredArguments[key] = arg;
   }
@@ -124,9 +126,12 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
            // result.requeiredArguments[key].value = argv[i + 1];
             if(result.requeiredArguments.count(key)) {
                 result.requeiredArguments[key].value = argv[i + 1];
-            } else {
+            } else if(result.optionalArguments.count(key)) {
                 result.optionalArguments[key].value = argv[i + 1];
                 result.pass_optional_args++;
+                optional_args_passed.push_back(key);
+            } else {
+                throw std::runtime_error("invalid args: " + key + " does not exist") ;
             }
             i += 2; // Increment to skip the value in the next iteration
         } else {
@@ -135,7 +140,17 @@ ArgsParser parse_args(const ArgsParser & mArgs, int argc, const char **argv) {
     }
     std::cout<<"result.pass_optional_args:"<<result.pass_optional_args<<" and  result.num_optional_args:"<<result.num_optional_args<<std::endl;
     if(result.pass_optional_args != result.num_optional_args) {
-        throw std::runtime_error("some optional args are not passed");
+        std::vector<std::string> missing_args;
+        for(const auto & [key, arg] : mArgs.optionalArguments) {
+            if(std::find(optional_args_passed.begin(), optional_args_passed.end(), key) == optional_args_passed.end()) {
+                missing_args.push_back(key);
+            }
+        }
+        std::string missing_args_str = "";
+        for(const auto & arg : missing_args) {
+            missing_args_str +=  arg + "  " ;
+        }
+        throw std::runtime_error("some optional args are not passed: " + missing_args_str);
     }
 
     return result;
@@ -164,14 +179,21 @@ T get(const ArgsParser & parser , const CmdlineArgRef<T> &ref)  {
 
 
 int main() {
-    char const *test_argv[] = {"program_name",
+
+      char const *test_argv[] = {"program_name",
                              "--batch-size",
                              "100",
-                              "-ll:gpus",
-                             "6",
                              "--fusion",
                              "false",
                              "--verbose"};
+    // char const *test_argv[] = {"program_name",
+    //                          "--batch-size",
+    //                          "100",
+    //                           "-ll:gpus",
+    //                          "6",
+    //                          "--fusion",
+    //                          "false",
+    //                          "--verbose"};
     
     // char const *test_argv[] = {"program_name",
     //                          "--batch-size",
@@ -186,6 +208,8 @@ int main() {
     //auto ll_gpus_ref = add_required_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
     auto fusion_ref = add_required_argument(args, "--fusion", std::optional<bool>(true), "Whether to use fusion or not");
     auto ll_gpus_ref = add_optional_argument<int>(args, "-ll:gpus", std::nullopt, "Number of GPUs to be used for training");
+    auto ll_cpus_ref = add_optional_argument<int>(args, "-ll:cpus", std::nullopt, "Number of CPUs to be used for training");
+
     auto verbose_ref = add_required_argument(args, "--verbose", std::optional<bool>(false), "Whether to print verbose logs",true);
     constexpr size_t test_argv_length = sizeof(test_argv) / sizeof(test_argv[0]);
     ArgsParser result = parse_args(args , test_argv_length, const_cast<const char **>(test_argv));
@@ -193,6 +217,7 @@ int main() {
    std::cout<<"batch_size:"<<get(result, batch_size_ref)<<std::endl;
     std::cout<<"ll_gpus:"<<get(result, ll_gpus_ref)<<std::endl;
     std::cout<<"fusion:"<<get(result, fusion_ref)<<std::endl;
+    std::cout<<"ll_cpus:"<<get(result, ll_cpus_ref)<<std::endl;
    bool is_verbose = get(result, verbose_ref);
 
     std::cout<<"verbose:"<<is_verbose<<std::endl;
